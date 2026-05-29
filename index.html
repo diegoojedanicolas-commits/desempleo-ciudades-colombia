@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Tasa de Desocupación - DANE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --color-principal: #9c0143; /* Magenta institucional de El Espectador / DANE */
+            --color-secundario: #111111;
+            --color-gris-oscuro: #555555;
+            --color-gris-claro: #f8f9fa;
+            --color-borde: #e0e0e0;
+            --color-positivo: #2d7d46;
+            --color-negativo: #c0392b;
+            --fuente-titulo: 'PT Serif', Georgia, serif;
+            --fuente-cuerpo: 'Roboto', Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: --fuente-cuerpo;
+            background-color: #ffffff;
+            color: var(--color-secundario);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 15px;
+        }
+
+        /* Encabezado estilo El Espectador */
+        header {
+            border-bottom: 3px solid var(--color-secundario);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-family: var(--fuente-titulo);
+            font-size: 2rem;
+            color: var(--color-secundario);
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 0.95rem;
+            color: var(--color-gris-oscuro);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .meta-info {
+            font-size: 0.85rem;
+            color: #777;
+            margin-top: 5px;
+        }
+
+        /* Buscador */
+        .search-container {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .search-label {
+            display: block;
+            font-family: var(--fuente-cuerpo);
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 1rem;
+            color: var(--color-secundario);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 1rem;
+            font-family: var(--fuente-cuerpo);
+            border: 2px solid var(--color-borde);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--color-principal);
+            box-shadow: 0 0 8px rgba(156, 1, 67, 0.15);
+        }
+
+        /* Tabla Responsiva */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--color-borde);
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background-color: var(--color-gris-claro);
+            color: var(--color-secundario);
+            font-family: var(--fuente-cuerpo);
+            font-weight: 700;
+            padding: 12px 16px;
+            border-bottom: 2px solid var(--color-secundario);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--color-borde);
+            color: #333;
+        }
+
+        tr:hover {
+            background-color: rgba(156, 1, 67, 0.03);
+        }
+
+        /* Resaltado de totales y filas especiales */
+        .row-destacada {
+            background-color: rgba(156, 1, 67, 0.05);
+            font-weight: 700;
+        }
+        
+        .row-destacada td {
+            color: var(--color-principal);
+        }
+
+        /* Formato de números y variaciones */
+        .num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .variacion-negativa {
+            color: var(--color-positivo); /* Menos desempleo es positivo */
+            font-weight: bold;
+        }
+
+        .variacion-positiva {
+            color: var(--color-negativo); /* Más desempleo es negativo */
+            font-weight: bold;
+        }
+
+        .no-results {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            color: var(--color-gris-oscuro);
+            font-family: var(--fuente-titulo);
+            font-size: 1.1rem;
+        }
+
+        /* Adaptabilidad Móvil (Media queries) */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            header h1 {
+                font-size: 1.6rem;
+            }
+            th, td {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+            .search-input {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Tasa de Desocupación (TD)</h1>
+            <p>Total nacional, 23 ciudades y áreas metropolitanas</p>
+            <div class="meta-info">Trimestre móvil Febrero - Abril (2025 – 2026) | Fuente: DANE (GEIH)</div>
+        </header>
+
+        <div class="search-container">
+            <label for="citySearch" class="search-label">Escriba el nombre de su ciudad o región:</label>
+            <input type="text" id="citySearch" class="search-input" placeholder="Ej. Medellín, Quibdó, Total nacional...">
+        </div>
+
+        <div class="table-responsive">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Ciudad / Región</th>
+                        <th class="num">Feb - Abr 25 (%)</th>
+                        <th class="num">Feb - Abr 26 (%)</th>
+                        <th class="num">Diferencia (p.p.)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Quibdó*</td><td class="num">33,2</td><td class="num">25,1</td><td class="num variacion-negativa">-8,1</td></tr>
+                    <tr><td>Cartagena*</td><td class="num">9,5</td><td class="num">13,1</td><td class="num variacion-positiva">3,5</td></tr>
+                    <tr><td>Riohacha*</td><td class="num">16,7</td><td class="num">12,8</td><td class="num variacion-negativa">-3,9</td></tr>
+                    <tr><td>Santa Marta*</td><td class="num">8,7</td><td class="num">12,0</td><td class="num variacion-positiva">3,2</td></tr>
+                    <tr><td>Tunja</td><td class="num">11,3</td><td class="num">11,5</td><td class="num variacion-positiva">0,3</td></tr>
+                    <tr class="row-destacada"><td>Ibagué*</td><td class="num">14,7</td><td class="num">11,2</td><td class="num variacion-negativa">-3,5</td></tr>
+                    <tr class="row-destacada"><td>Florencia*</td><td class="num">13,8</td><td class="num">10,9</td><td class="num variacion-negativa">-2,9</td></tr>
+                    <tr><td>Armenia</td><td class="num">10,1</td><td class="num">10,9</td><td class="num variacion-positiva">0,8</td></tr>
+                    <tr><td>Cúcuta A.M.</td><td class="num">12,5</td><td class="num">10,9</td><td class="num variacion-negativa">-1,6</td></tr>
+                    <tr class="row-destacada"><td>Sincelejo*</td><td class="num">13,1</td><td class="num">10,8</td><td class="num variacion-negativa">-2,4</td></tr>
+                    <tr><td>Barranquilla A.M.</td><td class="num">10,6</td><td class="num">10,7</td><td class="num variacion-positiva">0,1</td></tr>
+                    <tr><td>Montería</td><td class="num">11,4</td><td class="num">10,6</td><td class="num variacion-negativa">-0,8</td></tr>
+                    <tr><td>Popayán</td><td class="num">11,3</td><td class="num">9,9</td><td class="num variacion-negativa">-1,4</td></tr>
+                    <tr class="row-destacada"><td>Medellín A.M.*</td><td class="num">7,8</td><td class="num">9,8</td><td class="num variacion-positiva">2,0</td></tr>
+                    <tr><td>Valledupar</td><td class="num">9,6</td><td class="num">9,5</td><td class="num variacion-negativa">-0,1</td></tr>
+                    <tr class="row-destacada"><td>Total 23 ciudades y A.M.</td><td class="num">9,5</td><td class="num">9,3</td><td class="num variacion-negativa">-0,2</td></tr>
+                    <tr class="row-destacada"><td>Pasto*</td><td class="num">10,8</td><td class="num">9,3</td><td class="num variacion-negativa">-1,5</td></tr>
+                    <tr class="row-destacada"><td>Total 13 ciudades y A.M.</td><td class="num">9,3</td><td class="num">9,1</td><td class="num variacion-negativa">-0,2</td></tr>
+                    <tr class="row-destacada"><td>Total nacional*</td><td class="num">9,6</td><td class="num">8,9</td><td class="num variacion-negativa">-0,6</td></tr>
+                    <tr><td>Cali A.M.</td><td class="num">9,7</td><td class="num">8,7</td><td class="num variacion-negativa">-0,9</td></tr>
+                    <tr class="row-destacada"><td>Manizales A.M.*</td><td class="num">10,2</td><td class="num">8,3</td><td class="num variacion-negativa">-1,9</td></tr>
+                    <tr><td>Bogotá D.C.</td><td class="num">8,9</td><td class="num">8,2</td><td class="num variacion-negativa">-0,7</td></tr>
+                    <tr><td>Neiva</td><td class="num">9,9</td><td class="num">8,1</td><td class="num variacion-negativa">-1,8</td></tr>
+                    <tr><td>Bucaramanga A.M.</td><td class="num">8,8</td><td class="num">7,9</td><td class="num variacion-negativa">-0,9</td></tr>
+                    <tr class="row-destacada"><td>Pereira A.M.*</td><td class="num">9,6</td><td class="num">7,6</td><td class="num variacion-negativa">-2,0</td></tr>
+                    <tr><td>Villavicencio</td><td class="num">8,0</td><td class="num">7,5</td><td class="num variacion-negativa">-0,5</td></tr>
+                </tbody>
+            </table>
+            <div id="noResults" class="no-results">
+                No se encontraron resultados para la búsqueda realizada.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('citySearch').addEventListener('keyup', function() {
+            let filter = this.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // Remueve acentos para facilitar la búsqueda
+            let rows = document.querySelectorAll('#dataTable tbody tr');
+            let hasResults = false;
+
+            rows.forEach(row => {
+                let cityName = row.cells[0].textContent.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                if (cityName.includes(filter)) {
+                    row.style.display = '';
+                    hasResults = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Muestra mensaje alternativo si no encuentra nada
+            let noResultsDiv = document.getElementById('noResults');
+            if (hasResults) {
+                noResultsDiv.style.display = 'none';
+            } else {
+                noResultsDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
